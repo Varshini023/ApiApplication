@@ -1,0 +1,128 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.Entity;
+using System.Data.Entity.Infrastructure;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Web;
+using System.Web.Http;
+using System.Web.Http.Description;
+using WebAPIApplication.Models;
+
+namespace WebAPIApplication.Controllers
+{
+    public class FileUploadsController : ApiController
+    {
+        private FileUploadContext db = new FileUploadContext();
+
+        [HttpGet]
+        public IQueryable<FileUpload> GetfileUpload()
+        {
+            return db.fileUpload;
+        }
+
+        // GET: api/FileUploads/5
+        [ResponseType(typeof(FileUpload))]
+        public IHttpActionResult GetFileUpload(int id)
+        {
+            FileUpload fileUpload = db.fileUpload.Find(id);
+            if (fileUpload == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(fileUpload);
+        }
+
+        
+        // PUT: api/FileUploads/5
+        [ResponseType(typeof(void))]
+        public IHttpActionResult PutFileUpload(int id, FileUpload fileUpload)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (id != fileUpload.ImageId)
+            {
+                return BadRequest();
+            }
+
+            db.Entry(fileUpload).State = EntityState.Modified;
+
+            try
+            {
+                db.SaveChanges();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!FileUploadExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return StatusCode(HttpStatusCode.NoContent);
+        }
+
+        [HttpPost]
+        [ResponseType(typeof(FileUpload))]
+        public IHttpActionResult PostFileUpload()
+        {
+            if (HttpContext.Current.Request.Files.AllKeys.Any())
+            {
+                var httpPostedFile = HttpContext.Current.Request.Files["UploadedImage"];
+                if (httpPostedFile != null)
+                {
+                    FileUpload imageupload = new FileUpload();
+                    int length = httpPostedFile.ContentLength;
+                    imageupload.imagedata = new byte[length];
+                    httpPostedFile.InputStream.Read(imageupload.imagedata, 0, length);
+                    imageupload.ImageName = Path.GetFileName(httpPostedFile.FileName);
+                    db.fileUpload.Add(imageupload);
+                    db.SaveChanges();//image is saved in database                   
+                    return Ok("Image is uploaded");
+                }
+            }
+            return Ok("Image is not uploaded");
+        }
+
+        // DELETE: api/FileUploads/5
+        [ResponseType(typeof(FileUpload))]
+        public IHttpActionResult DeleteFileUpload(int id)
+        {
+            FileUpload fileUpload = db.fileUpload.Find(id);
+            if (fileUpload == null)
+            {
+                return NotFound();
+            }
+
+            db.fileUpload.Remove(fileUpload);
+            db.SaveChanges();
+
+            return Ok(fileUpload);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                db.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        private bool FileUploadExists(int id)
+        {
+            return db.fileUpload.Count(e => e.ImageId == id) > 0;
+        }
+    }
+}

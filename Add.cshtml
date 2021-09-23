@@ -1,0 +1,49 @@
+﻿
+@{
+    ViewBag.Title = "Add Advertisement";
+}
+
+<h2>Add Advertisement</h2>
+
+<div class="container">
+    <div>
+        <label></label>
+        <div>
+            <label style="margin-top:10px">Select File to Upload:</label>
+            <label for="fileUpload"></label>
+            <input id="fileUpload" type="file" name="files" />
+            <br />
+            <br />
+            <input id="btnUploadFile" type="button" value="Upload File" class="btn btn-primary" />
+        </div>
+    </div>
+    <label class="col-md-3" style="margin-top:15px" id="Resultid"></label>
+</div>
+
+<link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+<script src="~/Scripts/jquery-3.4.1.min.js"></script>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        $('#btnUploadFile').on('click', function () {
+
+            var data = new FormData()
+            var files = $("#fileUpload").get(0).files;
+            if (files.length > 0) {
+                data.append("UploadedImage", files[0]);
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "https://localhost:44305/api/FileUploads",
+                contentType: false,
+                processData: false,
+                data: data,
+                success: function (data) {
+                    $("#Resultid").html(data);
+                }
+            });            
+        });
+    });
+</script>
